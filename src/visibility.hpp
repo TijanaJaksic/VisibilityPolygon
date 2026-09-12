@@ -1,7 +1,6 @@
 #ifndef VISIBILITY_
 #define VISIBILITY_
 
-
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -16,7 +15,6 @@ using namespace geometry;
 float sweepAngle = 0.0;
 
 Point origin = {0.0, 0.0};
-
 
 struct Event {
     float angle;
@@ -33,8 +31,8 @@ struct CompareEvents {
             return e1.angle < e2.angle;
 
         // 2. Same angle: farther point comes first
-        float d1 = (e1.point-origin).distance(); 
-        float d2 = (e2.point-origin).distance(); 
+        float d1 = (e1.point - origin).distance();
+        float d2 = (e2.point - origin).distance();
 
         if (std::fabs(d1 - d2) > EPS)
             return d1 > d2;
@@ -60,8 +58,8 @@ struct CompareEvents {
         else
             other2 = e2.segment.a;
 
-        float otherD1 = (other1-origin).distance(); 
-        float otherD2 = (other2-origin).distance();
+        float otherD1 = (other1 - origin).distance();
+        float otherD2 = (other2 - origin).distance();
 
         if (std::fabs(otherD1 - otherD2) > EPS)
             return otherD1 > otherD2;
@@ -70,7 +68,6 @@ struct CompareEvents {
         return false;
     }
 };
-
 
 float distanceToRay(const Segment& s) {
     // vektor usmerenja zraka
@@ -115,8 +112,9 @@ float distanceToRay(const Segment& s) {
 Point intersectionWithRay(const Segment& s, sf::RenderWindow& window) {
     Point d = {std::cos(sweepAngle), std::sin(sweepAngle)};
     float t = distanceToRay(s);
-    if(t==INF) return {-1, -1}; // shouldn't happen
-    return origin + d*t;
+    if (t == INF)
+        return {-1, -1}; // shouldn't happen
+    return origin + d * t;
 }
 
 struct CompareSegment {
@@ -144,104 +142,87 @@ struct CompareSegment {
     }
 };
 
+// GLAVNI ALGORITAM:
+std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>& segments,
+                                     sf::RenderWindow& window) {
+    origin = viewpoint;
+    std::set<Event, CompareEvents> events;
 
-    /*
-        Glavni rotation-sweep algoritam.
+    // Svaki endpoint ubacimo u red dogadjaja:
+    for (const Segment& s : segments) {
+        float a1 = atan2(s.a.y - origin.y, s.a.x - origin.x);
 
-        Pretpostavka:
-        - segmenti ne presecaju jedni druge
-        - segmenti predstavljaju zatvorenu granicu
-        - viewpoint je unutar oblasti
-    */
-std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>& segments, sf::RenderWindow& window) {
-        origin = viewpoint;
-        std::set<Event, CompareEvents> events;
+        float a2 = atan2(s.b.y - origin.y, s.b.x - origin.x);
 
-        /*
-            Svaki endpoint predstavlja događaj:
-            kada sweep zrak prođe kroz njega,
-            može da se promeni najbliži segment.
-        */
-        for (const Segment& s : segments) {
-            float a1 = atan2(s.a.y - origin.y,
-                            s.a.x - origin.x);
-
-            float a2 = atan2(s.b.y - origin.y,
-                            s.b.x - origin.x);
-
-            if(orientation(origin, s.a, s.b)==1){
-                events.insert({a1, s.a, s, false});
-                events.insert({a2, s.b, s, true});
-            } else {
-                events.insert({a2, s.b, s, false});
-                events.insert({a1, s.a, s, true});
-            }
+        if (orientation(origin, s.a, s.b) == 1) {
+            events.insert({a1, s.a, s, false});
+            events.insert({a2, s.b, s, true});
+        } else {
+            events.insert({a2, s.b, s, false});
+            events.insert({a1, s.a, s, true});
         }
+    }
 
-        //aktivni segmenti:
-        std::set<Segment, CompareSegment> status;
+    // aktivni segmenti:
+    std::set<Segment, CompareSegment> status;
 
-        /*
-            Početni ugao
-        */
-        sweepAngle = (*events.begin()).angle - 0.0001;
+    // pocetni ugao
+    sweepAngle = (*events.begin()).angle - 0.0001;
 
-        /*
-            Ubacujemo segmente koji presecaju početni zrak - pravimo pocetni status
-            TODO check validity
-        */
-        for (const Segment& s : segments) {
-            if (distanceToRay(s) != INF)
-                status.insert(s);
-        }
+    // Ubacujemo segmente koji presecaju početni zrak - pravimo pocetni status
+    for (const Segment& s : segments) {
+        if (distanceToRay(s) != INF)
+            status.insert(s);
+    }
 
-        std::vector<geometry::Point> result;
+    std::vector<geometry::Point> result;
 
-        /*
-            Prolazak kroz dogadjaje
-        */
-        while(!events.empty()) {
-            Event e = *events.begin();
-            sweepAngle = e.angle;
-            events.erase(*events.begin());
+    // Prolazak kroz dogadjaje
+    while (!events.empty()) {
+        Event e = *events.begin();
+        sweepAngle = e.angle;
+        events.erase(*events.begin());
 
-            if(e.endPoint){ // ako je end point
-                if(e.segment == *status.begin()){ // ako je segment najblizi, onda je vidljiv
-                    result.push_back(e.point); // dodaj tacku u rez
-                    status.erase(e.segment); // ukloni segment iz statusa
-                    if (!status.empty()) { // ako nakon uklanjanja, status nije prazan, imamo novi presek
-                        if (distanceToRay(*status.begin()) == INF)
-                            continue;
-                        Point newIntersection = intersectionWithRay(*status.begin(), window);
-                        std::cout << "endPoint " <<newIntersection << ": " << *status.begin() << std::endl;
-                        result.push_back(newIntersection); // dodaj novi presek u rez
-                    }
-                } else { // ako nije najblizi
-                    status.erase(e.segment); // samo ukloni iz statusa
-                }
-            } else { // ako nije end point, onda je start point. 
-                
-                Point newIntersection;
-                bool intersectionAdded = false;
-                if(!status.empty()){
+        if (e.endPoint) {                       // ako je end point
+            if (e.segment == *status.begin()) { // ako je segment najblizi, onda je vidljiv
+                result.push_back(e.point);      // dodaj tacku u rez
+                status.erase(e.segment);        // ukloni segment iz statusa
+                if (!status
+                         .empty()) { // ako nakon uklanjanja, status nije prazan, imamo novi presek
                     if (distanceToRay(*status.begin()) == INF)
-                            continue;
-                    newIntersection = intersectionWithRay(*status.begin(), window); // presek sa segmentom najblizim originu, pre dodavanja naseg segmenta
-                    intersectionAdded=true;
-                    std::cout << "startPoint "<< newIntersection << ": " << *status.begin() << std::endl;
+                        continue;
+                    Point newIntersection = intersectionWithRay(*status.begin(), window);
+                    std::cout << "endPoint " << newIntersection << ": " << *status.begin()
+                              << std::endl;
+                    result.push_back(newIntersection); // dodaj novi presek u rez
                 }
-                status.insert(e.segment); // dodaj segment u status
-                if(e.segment == *status.begin()){// ako je ovo novi najblizi element
-                    // dodaj novi presek i pocetnu tacku u visibility poligon 
-                    if(intersectionAdded){
-                        result.push_back(newIntersection);
-                    }
-                    result.push_back(e.point);
-                } // ako nije, nista
+            } else {                     // ako nije najblizi
+                status.erase(e.segment); // samo ukloni iz statusa
             }
+        } else { // ako nije end point, onda je start point.
+            Point newIntersection;
+            bool intersectionAdded = false;
+            if (!status.empty()) {
+                if (distanceToRay(*status.begin()) == INF)
+                    continue;
+                newIntersection = intersectionWithRay(
+                    *status.begin(),
+                    window); // presek sa segmentom najblizim originu, pre dodavanja naseg segmenta
+                intersectionAdded = true;
+                std::cout << "startPoint " << newIntersection << ": " << *status.begin()
+                          << std::endl;
+            }
+            status.insert(e.segment);           // dodaj segment u status
+            if (e.segment == *status.begin()) { // ako je ovo novi najblizi element
+                // dodaj novi presek i pocetnu tacku u visibility poligon
+                if (intersectionAdded) {
+                    result.push_back(newIntersection);
+                }
+                result.push_back(e.point);
+            } // ako nije, nista
         }
-        return result;
+    }
+    return result;
 }
-
 
 #endif // VISIBILITY_

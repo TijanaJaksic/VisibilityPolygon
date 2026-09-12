@@ -1,3 +1,12 @@
+# O ALGORITMU:
+
+Pretpostavke:
+   - segmenti ne presecaju jedni druge
+   - segmenti predstavljaju zatvorenu granicu
+   - viewpoint je unutar oblasti
+
+# Ovaj projekat napravljen je pomocu SFML templejta:
+---
 # CMake SFML Project Template
 
 This repository template should allow for a fast and hassle-free kick start of your next SFML project using CMake.
