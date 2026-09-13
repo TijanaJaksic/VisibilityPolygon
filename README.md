@@ -1,9 +1,10 @@
-# O ALGORITMU:
+# ABOUT:
+Implementation of the algorithm for finding the visibility polygon with the rotation sweep ray technique. Done for the course Computational Geometry at the Faculty of Mathematics, University of Belgrade.
 
-Pretpostavke:
-   - segmenti ne presecaju jedni druge
-   - segmenti predstavljaju zatvorenu granicu
-   - viewpoint je unutar oblasti
+Assumptions:
+   - segments are non intersecting apart from end points
+   - segments create a closed boundary
+   - viewpoint is within the closed boundary
 
 # Ovaj projekat napravljen je pomocu SFML templejta:
 ---

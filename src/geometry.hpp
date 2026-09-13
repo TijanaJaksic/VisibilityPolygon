@@ -11,14 +11,14 @@
 
 const float PI = acos(-1.0);
 const float INF = std::numeric_limits<float>::infinity();
-const float EPS = 1e-6f;
+const float EPS = 1e-4f;
 
 namespace geometry {
 struct Point {
     float x, y;
 
     bool operator==(const Point& p) const {
-        return abs(x - p.x) < EPS && abs(y - p.y) < EPS;
+        return fabs(x - p.x) < EPS && fabs(y - p.y) < EPS;
     }
 
     Point operator+(const Point& p) const {
@@ -67,7 +67,7 @@ struct Segment {
     Point b;
 
     bool operator==(const Segment& other) const {
-        return a.x == other.a.x && a.y == other.a.y && b.x == other.b.x && b.y == other.b.y;
+        return a == other.a && b == other.b;
     }
 
     void draw(sf::RenderWindow& window, sf::Color color = sf::Color(180, 180, 180),
@@ -99,9 +99,9 @@ struct Segment {
 // provera orijentacije
 int orientation(const Point& p, const Point& q, const Point& r) {
     float cross_product = (q.y - p.y) * (r.x - p.x) - (r.y - p.y) * (q.x - p.x);
-    if (cross_product > 0)
+    if (cross_product > EPS)
         return -1;
-    if (cross_product < 0)
+    if (cross_product < -EPS)
         return 1;
     return 0;
 }

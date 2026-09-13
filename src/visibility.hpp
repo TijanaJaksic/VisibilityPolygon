@@ -95,21 +95,19 @@ Point intersectionWithRay(const Segment& s, sf::RenderWindow& window) {
     return origin + d * t;
 }
 
+static bool isColinearWithOrigin(const Segment& s) {
+    return orientation(s.a, s.b, origin) == 0;
+}
+
 struct CompareSegment {
     bool operator()(const Segment& s1, const Segment& s2) const {
-        // mozda treba da poredim segmente nezavisno od sweep zraka, samo na osnovu viewpointa
+        // da bi std::set funkcionisao, treba da poredim segmente nezavisno od sweep zraka, samo na
+        // osnovu viewpointa
         if (s1 == s2)
             return false;
 
-        // if (orientation(origin, s.a, s.b) == 1) {
-        //     events.push_back({a1, s.a, s, false});
-        //     events.push_back({a2, s.b, s, true});
-        // } else if (orientation(origin, s.a, s.b) == -1) {
-        //     events.push_back({a2, s.b, s, false});
-        //     events.push_back({a1, s.a, s, true});
-        // }
         Point a1, b1, a2, b2;
-
+        // uredimo tacke tako da a = START, b = END
         if (orientation(origin, s1.a, s1.b) == 1) {
             // a je start, b je end
             a1 = s1.a;
@@ -131,25 +129,17 @@ struct CompareSegment {
         float angle_a2 = atan2(a2.y - origin.y, a2.x - origin.x);
         float angle_b2 = atan2(b2.y - origin.y, b2.x - origin.x);
 
-        if (distanceToRay(s1, angle_a1 + ANGLE_EPS) != INF &&
-            distanceToRay(s2, angle_a1 + ANGLE_EPS) != INF)
-            return distanceToRay(s1, angle_a1 + ANGLE_EPS) <
-                   distanceToRay(s2, angle_a1 + ANGLE_EPS);
+        if (distanceToRay(s1, angle_a1 + EPS) != INF && distanceToRay(s2, angle_a1 + EPS) != INF)
+            return distanceToRay(s1, angle_a1 + EPS) < distanceToRay(s2, angle_a1 + EPS);
 
-        if (distanceToRay(s1, angle_b1 - ANGLE_EPS) != INF &&
-            distanceToRay(s2, angle_b1 - ANGLE_EPS) != INF)
-            return distanceToRay(s1, angle_b1 - ANGLE_EPS) <
-                   distanceToRay(s2, angle_b1 - ANGLE_EPS);
+        if (distanceToRay(s1, angle_b1 - EPS) != INF && distanceToRay(s2, angle_b1 - EPS) != INF)
+            return distanceToRay(s1, angle_b1 - EPS) < distanceToRay(s2, angle_b1 - EPS);
 
-        if (distanceToRay(s1, angle_a2 + ANGLE_EPS) != INF &&
-            distanceToRay(s2, angle_a2 + ANGLE_EPS) != INF)
-            return distanceToRay(s1, angle_a2 + ANGLE_EPS) <
-                   distanceToRay(s2, angle_a2 + ANGLE_EPS);
+        if (distanceToRay(s1, angle_a2 + EPS) != INF && distanceToRay(s2, angle_a2 + EPS) != INF)
+            return distanceToRay(s1, angle_a2 + EPS) < distanceToRay(s2, angle_a2 + EPS);
 
-        if (distanceToRay(s1, angle_b2 - ANGLE_EPS) != INF &&
-            distanceToRay(s2, angle_b2 - ANGLE_EPS) != INF)
-            return distanceToRay(s1, angle_b2 - ANGLE_EPS) <
-                   distanceToRay(s2, angle_b2 - ANGLE_EPS);
+        if (distanceToRay(s1, angle_b2 - EPS) != INF && distanceToRay(s2, angle_b2 - EPS) != INF)
+            return distanceToRay(s1, angle_b2 - EPS) < distanceToRay(s2, angle_b2 - EPS);
 
         // ukoliko leze na istoj pravoj i sa iste strane, ili leze sa raznih strana, ne bi trebalo
         // da je bitno koji poredak koristimo Tie-breaker: lexicographical ordering of endpoints
@@ -178,7 +168,7 @@ std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>
 
         float a2 = atan2(s.b.y - origin.y, s.b.x - origin.x);
 
-        if (a1 == a2)
+        if (fabs(a1 - a2) < EPS)
             continue; // necu ovakve segmente da dodajem u dogadjaje
 
         if (orientation(origin, s.a, s.b) == 1) {
@@ -192,6 +182,9 @@ std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>
     // sortiramo dogadjaje:
     std::sort(events.begin(), events.end(), CompareEvents());
 
+    if (events.empty())
+        return {};
+
     // aktivni segmenti:
     std::set<Segment, CompareSegment> status;
 
@@ -200,49 +193,38 @@ std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>
 
     // Ubacujemo segmente koji presecaju početni zrak - pravimo pocetni status
     for (const Segment& s : segments) {
-        if (distanceToRay(s, sweepAngle) != INF)
+        if (distanceToRay(s, sweepAngle) != INF && orientation(s.a, s.b, origin) != 0)
             status.insert(s);
     }
 
-    // TODO: BRISI
-    for (const Segment& s : status) {
-        s.draw(window, sf::Color(200, 100, 100), 10.0);
-    }
-    // BRISI END
-
     std::vector<geometry::Point> result;
 
+    std::cout << "---------------------------\n";
     // Prolazak kroz dogadjaje i formiranje poligona vidljivosti:
-    std::cout << "------------------" << std::endl;
     for (Event e : events) {
         sweepAngle = e.angle;
-        Segment ray = {
-            origin,
-            {origin.x + 1000 * std::cos(sweepAngle), origin.y + 1000 * std::sin(sweepAngle)}};
-        ray.draw(window, sf::Color(100, 200, 100));
-        std::cout << sweepAngle << std::endl;
-        std::cout << "angle=" << sweepAngle << " point=" << e.point << " end=" << e.endPoint
-                  << " segment=" << e.segment << "\nSTATUS:\n";
+        std::cout << "\n";
+        std::cout << e.point << std::endl;
+
+        std::cout << "status before: ";
         for (auto s : status) {
             std::cout << s << ", ";
         }
-        std::cout << std::endl;
+        std::cout << "\n";
 
-        if (e.endPoint) {                               // ako je end point
-            if (e.segment == *status.begin()) {         // ako je segment najblizi, onda je vidljiv
-                result.push_back(e.point);              // dodaj tacku u rez
-                auto removed = status.erase(e.segment); // ukloni segment iz statusa
-                std::cout << "removed2 " << e.segment << " " << removed << '\n';
-                if (!status
-                         .empty()) { // ako nakon uklanjanja, status nije prazan, imamo novi presek
+        if (e.endPoint) {                       // ako je end point
+            if (e.segment == *status.begin()) { // ako je segment najblizi, onda je vidljiv
+                result.push_back(e.point);      // dodaj tacku u rez
+                status.erase(e.segment);        // ukloni segment iz statusa
+                if (!status.empty()) { // ako nakon uklanjanja, status nije prazan, imamo novi
+                                       // presek
                     if (distanceToRay(*status.begin(), sweepAngle) == INF)
                         continue;
                     Point newIntersection = intersectionWithRay(*status.begin(), window);
                     result.push_back(newIntersection); // dodaj novi presek u rez
                 }
-            } else {                                    // ako nije najblizi
-                auto removed = status.erase(e.segment); // samo ukloni iz statusa
-                std::cout << "removed1 " << e.segment << " " << removed << '\n';
+            } else {                     // ako nije najblizi
+                status.erase(e.segment); // samo ukloni iz statusa
             }
         } else { // ako nije end point, onda je start point.
             Point newIntersection;
@@ -251,12 +233,13 @@ std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>
                 if (distanceToRay(*status.begin(), sweepAngle) != INF) {
                     newIntersection =
                         intersectionWithRay(*status.begin(),
-                                            window); // presek sa segmentom najblizim originu, pre
-                                                     // dodavanja naseg segmenta
+                                            window); // presek sa segmentom najblizim originu,
+                                                     // pre dodavanja naseg segmenta
                     intersectionAdded = true;
                 }
             }
-            status.insert(e.segment);           // dodaj segment u status
+            if (orientation(e.segment.a, e.segment.b, origin) != 0)
+                status.insert(e.segment);       // dodaj segment u status
             if (e.segment == *status.begin()) { // ako je ovo novi najblizi element
                 // dodaj novi presek i pocetnu tacku u visibility poligon
                 if (intersectionAdded) {
@@ -265,9 +248,18 @@ std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>
                 result.push_back(e.point);
             } // ako nije, nista
         }
+
+        std::cout << "status after: ";
+        for (auto s : status) {
+            std::cout << s << ", ";
+        }
+        std::cout << "\n";
     }
 
     // DRAW THE POLYGON:
+    if (result.size() < 2)
+        return result;
+
     for (int i = 0; i < result.size() - 1; i += 1) {
         // draw triangle {result[i], result[i+1], origin}
         // should work even if triangle is degenerated
