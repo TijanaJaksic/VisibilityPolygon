@@ -128,7 +128,8 @@ struct Polygon {
         }
     }
 
-    void drawPoints(sf::RenderWindow& window, sf::Color color, float radius = 5.0f) const {
+    void drawPoints(sf::RenderWindow& window, sf::Color color = sf::Color::Red,
+                    float radius = 5.0f) const {
         for (const auto& point : vertices) {
             sf::CircleShape circle(radius);
             circle.setFillColor(color);
