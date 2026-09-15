@@ -22,14 +22,11 @@ int main() {
         window.clear();
 
         geometry::Polygon polygon(visibilityPolygon(viewpoint, segments2, window));
-        // polygon.drawPoints(window);
-        // geometry::Segment s = {{311, 280}, {258, 172}};
-        // // s.draw(window, sf::Color::Green);
 
         viewpoint.draw(window);
 
         for (auto segment : segments2) {
-            segment.draw(window, sf::Color(255, 170, 170), 7.0);
+            segment.draw(window, sf::Color(255, 170, 170), 4.0);
         }
 
         window.display();

@@ -58,12 +58,6 @@ struct Point {
 float cross(Point a, Point b) {
     return a.x * b.y - a.y * b.x;
 }
-// TODO: MAYBE DELETE
-// struct comparePoints{
-//     bool operator()(const Point& a, const Point& b, const Point& viewpoint){
-
-//     }
-// };
 
 struct Segment {
     Point a;

@@ -24,7 +24,7 @@ struct Event {
     bool endPoint;
 };
 
-struct CompareEvents { // razliciti eventi mogu biti ekvivalentnog prioriteta
+struct CompareEvents {
     bool operator()(const Event& e1, const Event& e2) const {
 
         // smaller angle comes first
@@ -69,7 +69,7 @@ float distanceToRay(const Segment& s, float angle) {
         t*cross(d, v) = cross(s.a-origin, v)
         t = cross(w, v)/cross(d, v)
 
-        spicno:
+        slicno:
         u = cross(w, d) / cross(d, v)
     */
     Point w = s.a - origin;
@@ -101,8 +101,7 @@ static bool isColinearWithOrigin(const Segment& s) {
 
 struct CompareSegment {
     bool operator()(const Segment& s1, const Segment& s2) const {
-        // da bi std::set funkcionisao, treba da poredim segmente nezavisno od sweep zraka, samo na
-        // osnovu viewpointa
+        // poredim segmente nezavisno od sweep zraka, samo na osnovu viewpointa
         if (s1 == s2)
             return false;
 
