@@ -199,18 +199,9 @@ std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>
 
     std::vector<geometry::Point> result;
 
-    std::cout << "---------------------------\n";
     // Prolazak kroz dogadjaje i formiranje poligona vidljivosti:
     for (Event e : events) {
         sweepAngle = e.angle;
-        std::cout << "\n";
-        std::cout << e.point << std::endl;
-
-        std::cout << "status before: ";
-        for (auto s : status) {
-            std::cout << s << ", ";
-        }
-        std::cout << "\n";
 
         if (e.endPoint) {                       // ako je end point
             if (e.segment == *status.begin()) { // ako je segment najblizi, onda je vidljiv
@@ -248,12 +239,6 @@ std::vector<Point> visibilityPolygon(Point viewpoint, const std::vector<Segment>
                 result.push_back(e.point);
             } // ako nije, nista
         }
-
-        std::cout << "status after: ";
-        for (auto s : status) {
-            std::cout << s << ", ";
-        }
-        std::cout << "\n";
     }
 
     // DRAW THE POLYGON:

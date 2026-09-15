@@ -24,7 +24,7 @@ int main() {
                                                 {{10, 10}, {10, 990}},    {{10, 990}, {990, 990}},
                                                 {{990, 990}, {990, 10}},  {{990, 10}, {10, 10}}};
 
-    std::vector<geometry::Segment> segments2 = {// Internal segments
+    std::vector<geometry::Segment> segments3 = {// Internal segments
                                                 {{858, 920}, {36, 807}},
                                                 {{378, 314}, {189, 250}},
                                                 {{74, 777}, {500, 579}},
@@ -50,34 +50,36 @@ int main() {
                                                 {{990, 990}, {990, 10}},
                                                 {{990, 10}, {10, 10}}};
 
-    std::vector<geometry::Segment> segments = {// Internal segments
-                                               {{80, 100}, {280, 140}},
-                                               {{350, 100}, {550, 160}},
-                                               {{650, 100}, {900, 130}},
+    std::vector<geometry::Segment> segments5 = {// Internal segments
+                                                {{80, 100}, {280, 140}},
+                                                {{350, 100}, {550, 160}},
+                                                {{650, 100}, {900, 130}},
 
-                                               {{120, 220}, {300, 280}},
-                                               {{450, 200}, {700, 260}},
-                                               {{780, 220}, {930, 300}},
+                                                {{120, 220}, {300, 280}},
+                                                {{450, 200}, {700, 260}},
+                                                {{780, 220}, {930, 300}},
 
-                                               {{60, 360}, {250, 320}},
-                                               {{350, 350}, {520, 400}},
-                                               {{620, 330}, {850, 390}},
+                                                {{60, 360}, {250, 320}},
+                                                {{350, 350}, {520, 400}},
+                                                {{620, 330}, {850, 390}},
 
-                                               {{100, 480}, {300, 550}},
-                                               {{420, 470}, {650, 530}},
-                                               {{750, 460}, {920, 540}},
+                                                {{100, 480}, {300, 550}},
+                                                {{420, 470}, {650, 530}},
+                                                {{750, 460}, {920, 540}},
 
-                                               {{70, 650}, {250, 590}},
-                                               {{350, 620}, {550, 700}},
-                                               {{650, 640}, {850, 590}},
+                                                {{70, 650}, {250, 590}},
+                                                {{350, 620}, {550, 700}},
+                                                {{650, 640}, {850, 590}},
 
-                                               {{150, 800}, {350, 870}},
+                                                {{150, 800}, {350, 870}},
 
-                                               // Frame
-                                               {{10, 990}, {10, 10}},
-                                               {{990, 990}, {10, 990}},
-                                               {{990, 10}, {990, 990}},
-                                               {{10, 10}, {990, 10}}};
+                                                // Frame
+                                                {{-10, 1010}, {-10, -10}},
+                                                {{1010, 1010}, {-10, 1010}},
+                                                {{1010, -10}, {1010, 1010}},
+                                                {{-10, -10}, {1010, -10}}};
+
+    auto segments2 = geometry::loadSegmentsFromFile("segments.txt");
 
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {
@@ -92,14 +94,14 @@ int main() {
         window.clear();
 
         geometry::Polygon polygon(visibilityPolygon(viewpoint, segments2, window));
-        polygon.drawPoints(window);
-        geometry::Segment s = {{311, 280}, {258, 172}};
-        // s.draw(window, sf::Color::Green);
+        // polygon.drawPoints(window);
+        // geometry::Segment s = {{311, 280}, {258, 172}};
+        // // s.draw(window, sf::Color::Green);
 
         viewpoint.draw(window);
 
         for (auto segment : segments2) {
-            segment.draw(window);
+            segment.draw(window, sf::Color(255, 170, 170), 7.0);
         }
 
         window.display();

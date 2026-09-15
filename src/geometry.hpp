@@ -3,9 +3,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <set>
+#include <sstream>
+#include <string>
 #include <vector>
 #include <limits>
 
@@ -138,6 +141,35 @@ struct Polygon {
         }
     }
 };
+
+inline std::vector<Segment> loadSegmentsFromFile(const std::string& filePath) {
+    std::ifstream input(filePath);
+    std::vector<Segment> segments;
+
+    if (!input) {
+        std::cerr << "Failed to open segment file: " << filePath << '\n';
+        return segments;
+    }
+
+    std::string line;
+    while (std::getline(input, line)) {
+        if (line.empty())
+            continue;
+
+        // allow simple comment lines
+        if (line.find_first_not_of(" \t\r\n") == std::string::npos || line[0] == '#')
+            continue;
+
+        std::istringstream iss(line);
+        float x1, y1, x2, y2;
+        if (!(iss >> x1 >> y1 >> x2 >> y2))
+            continue; // ignore malformed lines
+
+        segments.push_back({{x1, y1}, {x2, y2}});
+    }
+
+    return segments;
+}
 } // namespace geometry
 
 #endif // GEOMETRY_
