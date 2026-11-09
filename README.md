@@ -6,7 +6,9 @@ Assumptions:
    - segments create a closed boundary
    - viewpoint is within the closed boundary
 
-# Ovaj projekat napravljen je pomocu SFML templejta:
+More details about the problem and the implementation are available in documentation.pdf
+
+# This project was made using a SFML Template:
 ---
 # CMake SFML Project Template
 
